@@ -1,31 +1,43 @@
 from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse
-from app.captioning import caption_image
-from app.search import web_search
-from app.summarizer import summarize_text
-from app.models import load_models
-import shutil
-import os
+from fastapi.middleware.cors import CORSMiddleware
+from PIL import Image
+from io import BytesIO
+from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer, pipeline
+import torch
 
 app = FastAPI()
-model, processor, tokenizer, device, summarizer = load_models()
+
+# Enable CORS for Streamlit frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Load models at startup
+model_name = "nlpconnect/vit-gpt2-image-captioning"
+caption_model = VisionEncoderDecoderModel.from_pretrained(model_name)
+processor = ViTImageProcessor.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+caption_model.to(device)
+
+summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 
 @app.post("/process/")
 async def process_image(file: UploadFile = File(...)):
-    temp_path = f"temp_{file.filename}"
-    with open(temp_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    
+    image = Image.open(BytesIO(await file.read())).convert("RGB")
+    image = image.resize((512, 512))
+    pixel_values = processor(images=image, return_tensors="pt").pixel_values.to(device)
+    
 
-    try:
-        caption = caption_image(temp_path, model, processor, tokenizer, device)
-        results = web_search(caption)
-        combined = " ".join(r.get("body", "") for r in results)
-        summary = summarize_text(combined, summarizer)
-    finally:
-        os.remove(temp_path)
+    output_ids = caption_model.generate(pixel_values, max_length=12, num_beams=3)
+    caption = tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
-    return JSONResponse(content={
-        "caption": caption,
-        "results": results,
-        "summary": summary
-    })
+    
+    summary = summarizer(caption, max_length=40, min_length=5, do_sample=False)[0]["summary_text"]
+
+    return {"caption": caption, "summary": summary}
+
