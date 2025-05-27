@@ -1,4 +1,3 @@
-# search-engine-powered-by-images-AI-app
  Image-to-Search AI App – Built with FastAPI, Streamlit, Docker, and Transformers
 
 
@@ -22,6 +21,8 @@ Docker: For containerizing both frontend & backend
 
 Google Colab: Leveraged GPU to speed up image captioning during development and testing
 
+ngrok: To expose the local Streamlit app securely and easily during development
+
 Transformers (Hugging Face): Used nlpconnect/vit-gpt2-image-captioning and distilbart-cnn-12-6
 
 🏗️ Built it with modularity and deployment in mind – full backend API, frontend UI, and Docker support.
@@ -36,4 +37,4 @@ Automatic captioning + summarization
 
 Search result visualization
 
-💻 Deployed and tested it using Google Colab for GPU acceleration and containerized everything with Docker for ease of deployment.
+💻 Deployed and tested it using Google Colab for GPU acceleration, exposed with ngrok for public access, and containerized everything with Docker for easy deployment.
