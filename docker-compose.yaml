@@ -2,21 +2,19 @@ version: "3.8"
 
 services:
   backend:
-    build: .
+    build:
+      context: ./backend
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app
     restart: always
 
   frontend:
-    image: python:3.10-slim
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
+    build:
+      context: ./frontend
     ports:
       - "8501:8501"
-    command: bash -c "pip install -r requirements.txt && streamlit run app.py --server.port=8501"
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
     depends_on:
       - backend
     restart: always
