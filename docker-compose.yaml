@@ -1,16 +1,22 @@
-version: '3.8'
+version: "3.8"
+
 services:
   backend:
     build: .
     ports:
       - "8000:8000"
-  frontend:
-    image: python:3.10
-    working_dir: /frontend
     volumes:
-      - ./frontend:/frontend
+      - .:/app
+    restart: always
+
+  frontend:
+    image: python:3.10-slim
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
     ports:
       - "8501:8501"
-    command: streamlit run streamlit_app.py --server.port=8501
+    command: bash -c "pip install -r requirements.txt && streamlit run app.py --server.port=8501"
     depends_on:
       - backend
+    restart: always
