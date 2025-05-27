@@ -7,7 +7,7 @@ import torch
 
 app = FastAPI()
 
-# Enable CORS for Streamlit frontend
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load models at startup
+
 model_name = "nlpconnect/vit-gpt2-image-captioning"
 caption_model = VisionEncoderDecoderModel.from_pretrained(model_name)
 processor = ViTImageProcessor.from_pretrained(model_name)
